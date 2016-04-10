@@ -16,18 +16,30 @@ Type of log output
 
 The log level of the builtin logging configuration defaults to WARNING.
 This is because we want |project_name| to be mostly silent and only output
-warnings (plus errors and critical messages).
-
-Use ``--verbose`` or ``--info`` to set INFO (you will get informative output then
-additionally to warnings, errors, critical messages).
-Use ``--debug`` to set DEBUG to get output made for debugging.
-
-All log messages created with at least the set level will be output.
+warnings, errors and critical messages.
 
 Log levels: DEBUG < INFO < WARNING < ERROR < CRITICAL
 
+Use ``--debug`` to set DEBUG log level -
+to get debug, info, warning, error and critical level output.
+
+Use ``--info`` (or ``-v`` or ``--verbose``) to set INFO log level -
+to get info, warning, error and critical level output.
+
+Use ``--warning`` (default) to set WARNING log level -
+to get warning, error and critical level output.
+
+Use ``--error`` to set ERROR log level -
+to get error and critical level output.
+
+Use ``--critical`` to set CRITICAL log level -
+to get critical level output.
+
 While you can set misc. log levels, do not expect that every command will
 give different output on different log levels - it's just a possibility.
+
+.. warning:: Options --critical and --error are provided for completeness,
+             their usage is not recommended as you might miss important information.
 
 .. warning:: While some options (like ``--stats`` or ``--list``) will emit more
              informational messages, you have to use INFO (or lower) log level to make
@@ -82,6 +94,8 @@ Some automatic "answerers" (if set, they automatically answer confirmation quest
         For "Warning: 'check --repair' is an experimental feature that might result in data loss."
     BORG_DELETE_I_KNOW_WHAT_I_AM_DOING=NO (or =YES)
         For "You requested to completely DELETE the repository *including* all archives it contains:"
+    BORG_RECREATE_I_KNOW_WHAT_I_AM_DOING=NO (or =YES)
+        For "recreate is an experimental feature."
 
     Note: answers are case sensitive. setting an invalid answer value might either give the default
     answer or ask you interactively, depending on whether retries are allowed (they by default are
@@ -179,6 +193,12 @@ For more information about that, see: https://xkcd.com/1179/
 Unless otherwise noted, we display local date and time.
 Internally, we store and process date and time as UTC.
 
+Common options
+~~~~~~~~~~~~~~
+
+All |project_name| commands share these options:
+
+.. include:: usage/common-options.rst.inc
 
 .. include:: usage/init.rst.inc
 
@@ -315,8 +335,11 @@ Examples
     # Restore a raw device (must not be active/in use/mounted at that time)
     $ borg extract --stdout /mnt/backup::my-sdx | dd of=/dev/sdx bs=10M
 
-Note: currently, extract always writes into the current working directory ("."),
-      so make sure you ``cd`` to the right place before calling ``borg extract``.
+
+.. Note::
+
+    Currently, extract always writes into the current working directory ("."),
+    so make sure you ``cd`` to the right place before calling ``borg extract``.
 
 .. include:: usage/check.rst.inc
 
@@ -333,26 +356,6 @@ Examples
     $ borg rename /mnt/backup::archivename newname
     $ borg list /mnt/backup
     newname                              Mon, 2016-02-15 19:50:19
-
-
-.. include:: usage/comment.rst.inc
-
-Examples
-~~~~~~~~
-::
-
-    $ borg create --comment "This is a comment" /mnt/backup::archivename ~
-    $ borg info /mnt/backup::archivename
-    Name: archivename
-    Fingerprint: ...
-    Comment: This is a comment
-    ...
-    $ borg comment /mnt/backup::archivename "This is a better comment"
-    $ borg info /mnt/backup::archivename
-    Name: archivename
-    Fingerprint: ...
-    Comment: This is a better comment
-    ...
 
 
 .. include:: usage/list.rst.inc
@@ -605,6 +608,41 @@ Examples
     converting 1 segments...
     converting borg 0.xx to borg current
     no key file found for repository
+
+
+.. include:: usage/recreate.rst.inc
+
+Examples
+~~~~~~~~
+::
+
+    # Make old (Attic / Borg 0.xx) archives deduplicate with Borg 1.x archives
+    # Archives created with Borg 1.1+ and the default chunker params are skipped (archive ID stays the same)
+    $ borg recreate /mnt/backup --chunker-params default --progress
+
+    # Create a backup with little but fast compression
+    $ borg create /mnt/backup::archive /some/files --compression lz4
+    # Then compress it - this might take longer, but the backup has already completed, so no inconsistencies
+    # from a long-running backup job.
+    $ borg recreate /mnt/backup::archive --compression zlib,9
+
+    # Remove unwanted files from all archives in a repository
+    $ borg recreate /mnt/backup -e /home/icke/Pictures/drunk_photos
+
+
+    # Change archive comment
+    $ borg create --comment "This is a comment" /mnt/backup::archivename ~
+    $ borg info /mnt/backup::archivename
+    Name: archivename
+    Fingerprint: ...
+    Comment: This is a comment
+    ...
+    $ borg recreate --comment "This is a better comment" /mnt/backup::archivename
+    $ borg info /mnt/backup::archivename
+    Name: archivename
+    Fingerprint: ...
+    Comment: This is a better comment
+    ...
 
 
 Miscellaneous Help

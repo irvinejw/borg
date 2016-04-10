@@ -1,5 +1,6 @@
 import os
-from .helpers import user2uid, group2gid, safe_decode, safe_encode
+from .helpers import safe_decode, safe_encode
+from .platform_posix import user2uid, group2gid
 
 API_VERSION = 2
 

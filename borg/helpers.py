@@ -2,12 +2,10 @@ import argparse
 from binascii import hexlify
 from collections import namedtuple
 from functools import wraps, partial
-import grp
 import hashlib
 import os
 import stat
 import textwrap
-import pwd
 import re
 from shutil import get_terminal_size
 import sys
@@ -33,6 +31,8 @@ import msgpack
 import msgpack.fallback
 
 import socket
+
+from .platform import uid2user, getuid
 
 # return codes returned by borg command
 # when borg is killed by signal N, rc = 128 + N
@@ -656,51 +656,6 @@ def format_archive(archive):
     )
 
 
-def memoize(function):
-    cache = {}
-
-    def decorated_function(*args):
-        try:
-            return cache[args]
-        except KeyError:
-            val = function(*args)
-            cache[args] = val
-            return val
-    return decorated_function
-
-
-@memoize
-def uid2user(uid, default=None):
-    try:
-        return pwd.getpwuid(uid).pw_name
-    except KeyError:
-        return default
-
-
-@memoize
-def user2uid(user, default=None):
-    try:
-        return user and pwd.getpwnam(user).pw_uid
-    except KeyError:
-        return default
-
-
-@memoize
-def gid2group(gid, default=None):
-    try:
-        return grp.getgrgid(gid).gr_name
-    except KeyError:
-        return default
-
-
-@memoize
-def group2gid(group, default=None):
-    try:
-        return group and grp.getgrnam(group).gr_gid
-    except KeyError:
-        return default
-
-
 def posix_acl_use_stored_uid_gid(acl):
     """Replace the user/group field with the stored uid/gid
     """
@@ -758,7 +713,7 @@ class Location:
             'hostname': socket.gethostname(),
             'now': current_time.now(),
             'utcnow': current_time.utcnow(),
-            'user': uid2user(os.getuid(), os.getuid())
+            'user': uid2user(getuid(), getuid())
             }
         return format_line(text, data)
 

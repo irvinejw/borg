@@ -16,11 +16,11 @@ import sys
 import time
 from io import BytesIO
 from . import xattr
-from .helpers import Error, uid2user, user2uid, gid2group, group2gid, \
+from .helpers import Error, \
     parse_timestamp, to_localtime, format_time, format_timedelta, \
     Manifest, Statistics, decode_dict, make_path_safe, StableDict, int_to_bigint, bigint_to_int, \
     ProgressIndicatorPercent
-from .platform import acl_get, acl_set
+from .platform import acl_get, acl_set, uid2user, user2uid, gid2group, group2gid
 from .chunker import Chunker
 from .hashindex import ChunkIndex
 import msgpack

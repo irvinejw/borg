@@ -1,7 +1,8 @@
 import os
 import re
 from stat import S_ISLNK
-from .helpers import posix_acl_use_stored_uid_gid, user2uid, group2gid, safe_decode, safe_encode
+from .helpers import posix_acl_use_stored_uid_gid, safe_decode, safe_encode
+from .platform_posix import user2uid, group2gid
 
 API_VERSION = 2
 

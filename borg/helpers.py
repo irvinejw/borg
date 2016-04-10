@@ -735,7 +735,7 @@ class Location:
                         r'(?P<host>[^:/#]+)(?::(?P<port>\d+))?'
                         r'(?P<path>[^:]+)(?:::(?P<archive>[^/]+))?$')
     file_re = re.compile(r'(?P<proto>file)://'
-                         r'(?P<path>[^:]+)(?:::(?P<archive>[^/]+))?$')
+                         r'(?P<path>.+?)(?:::(?P<archive>[^/]+))?$')
     scp_re = re.compile(r'((?:(?P<user>[^@]+)@)?(?P<host>[^:/]+):)?'
                         r'(?P<path>[^:]+)(?:::(?P<archive>[^/]+))?$')
     # get the repo from BORG_RE env and the optional archive from param.

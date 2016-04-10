@@ -446,10 +446,13 @@ Number of files: {0.stats.nfiles}'''.format(
         else:
             # old archives only had mtime in item metadata
             atime = mtime
-        if fd:
+        if fd and (os.utime in os.supports_fd):
             os.utime(fd, None, ns=(atime, mtime))
         else:
-            os.utime(path, None, ns=(atime, mtime), follow_symlinks=False)
+            if os.utime in os.supports_follow_symlinks:
+                os.utime(path, None, ns=(atime, mtime), follow_symlinks=False)
+            else:
+                os.utime(path, None, ns=(atime, mtime))
         acl_set(path, item, self.numeric_owner)
         # Only available on OS X and FreeBSD
         if has_lchflags and b'bsdflags' in item:

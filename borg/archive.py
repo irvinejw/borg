@@ -330,6 +330,12 @@ Number of files: {0.stats.nfiles}'''.format(
         if item[b'path'].startswith('/') or item[b'path'].startswith('..'):
             raise Exception('Path should be relative and local')
         path = os.path.join(dest, item[b'path'])
+        # Windows: remove drive letter and initial \ or / from path, if present
+        (drive, tail) = os.path.splitdrive(path)
+        if tail.startswith('\\'):
+            path = os.path.join(dest, tail[1:])
+        else:
+            path = os.path.join(dest, tail)
         # Attempt to remove existing files, ignore errors on failure
         try:
             st = os.lstat(path)

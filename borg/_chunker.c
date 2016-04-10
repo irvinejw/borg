@@ -1,6 +1,10 @@
 #include <Python.h>
 #include <fcntl.h>
 
+#ifdef _MSC_VER
+#include <stdint.h>
+#endif
+
 /* Cyclic polynomial / buzhash: https://en.wikipedia.org/wiki/Rolling_hash */
 
 static uint32_t table_base[] =

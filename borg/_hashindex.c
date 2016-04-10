@@ -6,7 +6,15 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#ifndef _MSC_VER
 #include <unistd.h>
+#define PACK(__Declaration__) __Declaration__ __attribute__((__packed__))
+#else
+#define PACK(__Declaration__) __pragma(pack(push, 1)) __Declaration__ __pragma(pack(pop))
+#define BYTE_ORDER 1
+#define LITTLE_ENDIAN 1
+#endif
 
 #if defined (__SVR4) && defined (__sun)
 #include <sys/isa_defs.h>
@@ -27,13 +35,15 @@
 #define MAGIC "BORG_IDX"
 #define MAGIC_LEN 8
 
+PACK(
 typedef struct {
     char magic[MAGIC_LEN];
     int32_t num_entries;
     int32_t num_buckets;
     int8_t  key_size;
     int8_t  value_size;
-} __attribute__((__packed__)) HashHeader;
+} HashHeader;
+)
 
 typedef struct {
     void *buckets;
@@ -76,7 +86,13 @@ static int hash_sizes[] = {
 #define EMPTY _htole32(0xffffffff)
 #define DELETED _htole32(0xfffffffe)
 
-#define BUCKET_ADDR(index, idx) (index->buckets + (idx * index->bucket_size))
+#ifndef _MSC_VER
+#define VOID_CAST(x) (x)
+#else
+#define VOID_CAST(x) ((unsigned char*)x)
+#endif
+
+#define BUCKET_ADDR(index, idx) (VOID_CAST(index->buckets) + (idx * index->bucket_size))
 
 #define BUCKET_MATCHES_KEY(index, idx, key) (memcmp(key, BUCKET_ADDR(index, idx), index->key_size) == 0)
 
@@ -148,7 +164,7 @@ hashindex_resize(HashIndex *index, int capacity)
         return 0;
     }
     while((key = hashindex_next_key(index, key))) {
-        hashindex_set(new, key, key + key_size);
+        hashindex_set(new, key, VOID_CAST(key) + key_size);
     }
     free(index->buckets);
     index->buckets = new->buckets;
@@ -420,7 +436,7 @@ hashindex_next_key(HashIndex *index, const void *key)
 {
     int idx = 0;
     if(key) {
-        idx = 1 + (key - index->buckets) / index->bucket_size;
+        idx = 1 + (VOID_CAST(key) - index->buckets) / index->bucket_size;
     }
     if (idx == index->num_buckets) {
         return NULL;
@@ -450,7 +466,7 @@ hashindex_summarize(HashIndex *index, long long *total_size, long long *total_cs
     void *key = NULL;
 
     while((key = hashindex_next_key(index, key))) {
-        values = key + index->key_size;
+        values = VOID_CAST(key) + index->key_size;
         unique_chunks++;
         chunks += values[0];
         unique_size += values[1];
@@ -484,6 +500,6 @@ hashindex_merge(HashIndex *index, HashIndex *other)
     void *key = NULL;
 
     while((key = hashindex_next_key(other, key))) {
-        hashindex_add(index, key, key + key_size);
+        hashindex_add(index, key, VOID_CAST(key) + key_size);
     }
 }

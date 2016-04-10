@@ -41,6 +41,8 @@ if libc_name is None:
         libc_name = 'libc.so'
     elif sys.platform == 'darwin':
         libc_name = 'libc.dylib'
+    elif sys.platform == 'win32':
+        libc_name = 'msvcrt'
     else:
         msg = "Can't find C library. No fallback known. Try installing ldconfig, gcc/cc or objdump."
         logger.error(msg)

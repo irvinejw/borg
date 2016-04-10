@@ -1,5 +1,4 @@
 import errno
-import fcntl
 import logging
 import os
 import select
@@ -7,6 +6,9 @@ import shlex
 from subprocess import Popen, PIPE
 import sys
 import tempfile
+
+if sys.platform != 'win32':
+    import fcntl
 
 from . import __version__
 

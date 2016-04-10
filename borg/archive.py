@@ -38,6 +38,10 @@ CHUNKER_PARAMS = (CHUNK_MIN_EXP, CHUNK_MAX_EXP, HASH_MASK_BITS, HASH_WINDOW_SIZE
 # chunker params for the items metadata stream, finer granularity
 ITEMS_CHUNKER_PARAMS = (12, 16, 14, HASH_WINDOW_SIZE)
 
+has_fchown = hasattr(os, 'fchown')
+has_lchown = hasattr(os, 'lchown')
+has_chmod = hasattr(os, 'chmod')
+has_fchmod = hasattr(os, 'fchmod')
 has_lchmod = hasattr(os, 'lchmod')
 has_lchflags = hasattr(os, 'lchflags')
 
@@ -418,15 +422,15 @@ Number of files: {0.stats.nfiles}'''.format(
         gid = item[b'gid'] if gid is None else gid
         # This code is a bit of a mess due to os specific differences
         try:
-            if fd:
+            if fd and has_fchown:
                 os.fchown(fd, uid, gid)
-            else:
+            elif has_lchown:
                 os.lchown(path, uid, gid)
         except OSError:
             pass
-        if fd:
+        if fd and has_fchmod:
             os.fchmod(fd, item[b'mode'])
-        elif not symlink:
+        elif not symlink and has_chmod:
             os.chmod(path, item[b'mode'])
         elif has_lchmod:  # Not available on Linux
             os.lchmod(path, item[b'mode'])

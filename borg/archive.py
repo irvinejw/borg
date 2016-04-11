@@ -381,6 +381,7 @@ Number of files: {0.stats.nfiles}'''.format(
                 pos = fd.tell()
                 fd.truncate(pos)
                 fd.flush()
+                os.fsync(fd.fileno())
                 self.restore_attrs(path, item, fd=fd.fileno())
             if hardlink_masters:
                 # Update master entry with extracted file path, so that following hardlinks don't extract twice.
